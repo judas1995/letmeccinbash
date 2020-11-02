@@ -22,6 +22,7 @@ tmp_file05=tmp_file05_tmp.txt
 
 
 #定義資料位置(bp是建立在我拿的資料如果已經band pass過後)
+#這是測試2號
 ls $data_path/*bp >$tmp_path/$tmp_file04
 
 #tr
