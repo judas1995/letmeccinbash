@@ -9,7 +9,7 @@ TIME_ELAPSE_a=$(date --date="now" +%s)
 
 whereweare=$(pwd)
 
-data_path=../data     
+data_path=../data
 tmp_path=../tmp
 output_path=../output
 output_file_01=Moon_out.txt
@@ -21,14 +21,39 @@ tmp_file04=tmp_file04_tmp.txt
 tmp_file05=tmp_file05_tmp.txt
 
 
+
+########以下程式碼勿動letmebashcc main code########
+
 #定義資料位置(bp是建立在我拿的資料如果已經band pass過後)
-#這是測試2號
-ls $data_path/*bp >$tmp_path/$tmp_file04
 
-#tr
-#ls $data_path/waveform_test/tremor/tremor/ -d >  $tmp_path/$tmp_file04
+ls $data_path/*.bp > $tmp_path/$tmp_file01
 
-#1 before10_10 2 clean_EQ 3 noise 4 noise_EQ 5 tremor
+#sac
+echo "r $data_path/*bp ; rtr; rmean; envelope; lp co 0.2 p 2; w append .lp; q;" | sac >/dev/null 2>&1
+
+echo "r $data_path/*bp ; rtr; rmean; envelope; lp co 0.2 p 2; sqr; w append .sqr; q;" | sac >/dev/null 2>&1
+
+saclst B DEPMEN DEPMAX f $data_path/*.lp >$tmp_path/$tmp_file02
+
+saclst B DEPMEN DEPMAX f $data_path/*.sqr >$tmp_path/$tmp_file02.sqr
+
+ls $data_path/*.sqr >$tmp_path/$tmp_file01.sqr
+
+ls $data_path/*.lp >$tmp_path/$tmp_file01
+cp $tmp_path/$tmp_file01 $tmp_path/$tmp_file01.copy
+
+sed -i 's/\//\\\//g' $tmp_path/$tmp_file01
+
+moa_tmp=mmttmp.txt
+rm $tmp_path/$moa_tmp
+
+
+
+
+
+
+
+
 #Z_loop=`gawk 'NR==1{print NR}' $tmp_path/$tmp_file04`
 Z_loop=$(gawk 'NR==3{print NR}' $tmp_path/$tmp_file04)
 for z in $Z_loop; do
