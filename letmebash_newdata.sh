@@ -7,8 +7,12 @@
 TIME_ELAPSE_a=$(date --date="now" +%s)
 ######計時用######
 
+data_path=../data
+tmp_path=../tmp
+output_path=../output
+
 #####偵測資料夾路徑是否存在#####
-dirTest() {
+dirTest(){
     if [ -d "$1" ]; then
         # 目錄 /path/to/dir 存在
         dir_test=1
@@ -20,25 +24,19 @@ dirTest() {
 ##############################
 
 #######偵測檔案是否存在########
-fileTest() {
+fileTest(){
     if [ -f "$1" ]; then
         # 檔案 /path/to/dir/filename 存在
         file_test=1
     else
         # 檔案 /path/to/dir/filename 不存在
-        file_test=1
+        file_test=0
     fi
 }
 ############################
 
-
 whereweare=$(pwd)
-
-data_path=../data
-tmp_path=../tmp
-output_path=../output
 output_file_01=Moon_out.txt
-
 tmp_file01=tmp_file01_tmp.txt
 tmp_file02=tmp_file02_tmp.txt
 tmp_file03=tmp_file03_tmp.txt
@@ -48,27 +46,46 @@ tmp_file05=tmp_file05_tmp.txt
 ########以下程式碼勿動letmebashcc main code########
 
 #定義資料位置(bp是建立在我拿的資料如果已經band pass過後)
-
 ls $data_path/*.bp >$tmp_path/$tmp_file01
 
-#sac
+##sac 前置處理  胞絡化  低通濾波0.2Hz##
 echo "r $data_path/*bp ; rtr; rmean; envelope; lp co 0.2 p 2; w append .lp; q;" | sac >/dev/null 2>&1
+#####################################
 
+##sac 前置處理  胞絡化  低通濾波0.2Hz 波形平方##
 echo "r $data_path/*bp ; rtr; rmean; envelope; lp co 0.2 p 2; sqr; w append .sqr; q;" | sac >/dev/null 2>&1
+#############################################
 
+##把低通濾波後的SAC資料的 B(波形p1的起始點) DEPMEN(平均振幅) DEPMAX(最大振幅) 抓出來##
 saclst B DEPMEN DEPMAX f $data_path/*.lp >$tmp_path/$tmp_file02
+#################################################################################
 
+##把波形平方後的SAC資料的 B(波形p1的起始點) DEPMEN(平均振幅) DEPMAX(最大振幅) 抓出來##
 saclst B DEPMEN DEPMAX f $data_path/*.sqr >$tmp_path/$tmp_file02.sqr
+#################################################################################
 
+#定義sqr資料位置
 ls $data_path/*.sqr >$tmp_path/$tmp_file01.sqr
-
+#定義lp資料位置
 ls $data_path/*.lp >$tmp_path/$tmp_file01
-cp $tmp_path/$tmp_file01 $tmp_path/$tmp_file01.copy
 
+##轉成SCC可以讀的資料格式，先複製一個備份##
+cp $tmp_path/$tmp_file01 $tmp_path/$tmp_file01.copy
+#把"/"取代成"/\"
 sed -i 's/\//\\\//g' $tmp_path/$tmp_file01
+########################################
 
 moa_tmp=mmttmp.txt
-rm $tmp_path/$moa_tmp
+
+###檢測 moa_tmp 檔案是否存在###
+fileTest $tmp_path/$moa_tmp
+#echo file_test
+
+if [ $file_test == 1 ]; then
+    # 檔案 /path/to/dir/filename 存在
+    rm $tmp_path/$moa_tmp
+fi
+#############################
 
 #Z_loop=`gawk 'NR==1{print NR}' $tmp_path/$tmp_file04`
 Z_loop=$(gawk 'NR==3{print NR}' $tmp_path/$tmp_file04)
