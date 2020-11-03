@@ -7,6 +7,31 @@
 TIME_ELAPSE_a=$(date --date="now" +%s)
 ######計時用######
 
+#####偵測資料夾路徑是否存在#####
+dirTest() {
+    if [ -d "$1" ]; then
+        # 目錄 /path/to/dir 存在
+        dir_test=1
+    else
+        # 目錄 /path/to/dir 不存在
+        dir_test=0
+    fi
+}
+##############################
+
+#######偵測檔案是否存在########
+fileTest() {
+    if [ -f "$1" ]; then
+        # 檔案 /path/to/dir/filename 存在
+        file_test=1
+    else
+        # 檔案 /path/to/dir/filename 不存在
+        file_test=1
+    fi
+}
+############################
+
+
 whereweare=$(pwd)
 
 data_path=../data
@@ -20,13 +45,11 @@ tmp_file03=tmp_file03_tmp.txt
 tmp_file04=tmp_file04_tmp.txt
 tmp_file05=tmp_file05_tmp.txt
 
-
-
 ########以下程式碼勿動letmebashcc main code########
 
 #定義資料位置(bp是建立在我拿的資料如果已經band pass過後)
 
-ls $data_path/*.bp > $tmp_path/$tmp_file01
+ls $data_path/*.bp >$tmp_path/$tmp_file01
 
 #sac
 echo "r $data_path/*bp ; rtr; rmean; envelope; lp co 0.2 p 2; w append .lp; q;" | sac >/dev/null 2>&1
@@ -46,13 +69,6 @@ sed -i 's/\//\\\//g' $tmp_path/$tmp_file01
 
 moa_tmp=mmttmp.txt
 rm $tmp_path/$moa_tmp
-
-
-
-
-
-
-
 
 #Z_loop=`gawk 'NR==1{print NR}' $tmp_path/$tmp_file04`
 Z_loop=$(gawk 'NR==3{print NR}' $tmp_path/$tmp_file04)
