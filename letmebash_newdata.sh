@@ -323,45 +323,44 @@ if [ 1 == $tremorDetect ]; then
 
     done
 
-fi
+    ####用測站對ccc高於0.6的數量####
+    scc_cau=scc_ulaala.txt
 
-####用測站對ccc高於0.6的數量####
-scc_cau=scc_ulaala.txt
+    ###檢測 event_name.scc_cau 檔案是否存在###
+    fileTest $tmp_path/$event_name.scc_cau
+    #echo file_test
+    if [ $file_test == 1 ]; then
+        # 檔案 /path/to/dir/filename 存在
+        rm $tmp_path/$event_name.scc_cau
+    fi
+    ########################################
 
-###檢測 event_name.scc_cau 檔案是否存在###
-fileTest $tmp_path/$event_name.scc_cau
-#echo file_test
-if [ $file_test == 1 ]; then
-    # 檔案 /path/to/dir/filename 存在
-    rm $tmp_path/$event_name.scc_cau
-fi
-########################################
+    cat $tmp_path/scc*scc* | gawk '$3>=0.6{print $0}' | gawk -F"." '{print $4}' | sort | uniq -c >$tmp_path/$scc_cau
 
-cat $tmp_path/scc*scc* | gawk '$3>=0.6{print $0}' | gawk -F"." '{print $4}' | sort | uniq -c >$tmp_path/$scc_cau
+    E_loop=$(gawk '{print NR}' $tmp_path/$scc_cau)
+    for e in $E_loop; do
+        scc_bigger=$(gawk '$1>='$e'{print $0}' $tmp_path/$scc_cau | wc -l)
 
-E_loop=$(gawk '{print NR}' $tmp_path/$scc_cau)
-for e in $E_loop; do
-    scc_bigger=$(gawk '$1>='$e'{print $0}' $tmp_path/$scc_cau| wc -l)
+        echo $e $scc_bigger >>$tmp_path/$event_name.scc_cau
+    done
+    #############################
 
-    echo $e $scc_bigger >>$tmp_path/$event_name.scc_cau
-done
-#############################
+    ###########決定tremor跟noise#################
+    tremor_char=$(cat $tmp_path/scc*scc* | gawk '$3>=0.6{print $0}' | gawk -F"." '{print $4}' | sort | uniq -c | gawk '$1>=3{print $0}' | wc -l)
+    tremor_char=$(($tremor_char + 0))
+    if [ $tremor_char -ge 3 ]; then
 
+        echo "I'm Tremor."
 
-###########決定tremor跟noise#################
-tremor_char=$(cat $tmp_path/scc*scc* | gawk '$3>=0.6{print $0}' | gawk -F"." '{print $4}' | sort | uniq -c | gawk '$1>=3{print $0}' | wc -l)
-tremor_char=$(($tremor_char + 0))
-if [ $tremor_char -ge 3 ]; then
+        echo "$event_name" >>$output_path/first.out
 
-    echo "I'm Tremor."
+    else
+        echo "I'm Noise."
 
-    echo "$event_name" >> $output_path/first.out
-
-else
-    echo "I'm Noise."
-
-fi
+    fi
 ############################################
+
+fi
 
 rm $tmp_path/$event_name.txt
 rm $tmp_path/$event_name.txt.copy
