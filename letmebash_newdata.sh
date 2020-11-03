@@ -225,6 +225,7 @@ for d in $D_loop; do
     else
         #紀錄因為甚麼原因被定義成tremor
         ntremor=$(($ntremor + 1))
+        echo "$every_data_path $every_data_name  tremor" >>$tmp_path/$event_name.txt.tmp.tmp
         echo "$every_data_path $every_data_name  tremor" >>$tmp_path/$event_name.txt
 
     fi
@@ -353,6 +354,9 @@ tremor_char=$(($tremor_char + 0))
 if [ $tremor_char -ge 3 ]; then
 
     echo "I'm Tremor."
+
+    echo "$event_name" >> $output_path/first.out
+
 else
     echo "I'm Noise."
 
