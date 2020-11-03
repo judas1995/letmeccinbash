@@ -15,10 +15,10 @@ output_path=../output
 dirTest() {
     if [ -d "$1" ]; then
         # 目錄 /path/to/dir 存在
-        dir_test=$[1+0]
+        dir_test=$((1 + 0))
     else
         # 目錄 /path/to/dir 不存在
-        dir_test=$[0+0]
+        dir_test=$((0 + 0))
     fi
 }
 ##############################
@@ -27,10 +27,10 @@ dirTest() {
 fileTest() {
     if [ -f "$1" ]; then
         # 檔案 /path/to/dir/filename 存在
-        file_test=$[1+0]
+        file_test=$((1 + 0))
     else
         # 檔案 /path/to/dir/filename 不存在
-        file_test=$[0+0]
+        file_test=$((0 + 0))
     fi
 }
 ############################
@@ -231,9 +231,9 @@ for d in $D_loop; do
 
 done
 
-echo "$nwaveform $neq $ntremor $nnoise $nmoa $event_number"
+echo "$nwaveform $neq $ntremor $nnoise $nmoa $event_name"
 #記錄該事件各測站的統計(總波形數量 地震波形數量 tremor波形數量 雜訊波形數量 MaxOverAverage波形數量 事件編號)
-echo "$nwaveform $neq $ntremor $nnoise $nmoa $event_number" >>$output_path/$output_file_01
+echo "$nwaveform $neq $ntremor $nnoise $nmoa $event_name" >>$output_path/$output_file_01
 
 tremorDetect=0
 if [ $(echo "$neq >= $nwaveform*0.4" | bc) -eq 1 ]; then
@@ -323,11 +323,46 @@ if [ 1 == $tremorDetect ]; then
     done
 
 fi
+
+####用測站對ccc高於0.6的數量####
+scc_cau=scc_ulaala.txt
+
+###檢測 event_name.scc_cau 檔案是否存在###
+fileTest $tmp_path/$event_name.scc_cau
+#echo file_test
+if [ $file_test == 1 ]; then
+    # 檔案 /path/to/dir/filename 存在
+    rm $tmp_path/$event_name.scc_cau
+fi
+########################################
+
+cat $tmp_path/scc*scc* | gawk '$3>=0.6{print $0}' | gawk -F"." '{print $4}' | sort | uniq -c >$tmp_path/$scc_cau
+
+E_loop=$(gawk '{print NR}' $tmp_path/$scc_cau)
+for e in $E_loop; do
+    scc_bigger=$(gawk '$1>='$e'{print $0}' $tmp_path/$scc_cau| wc -l)
+
+    echo $e $scc_bigger >>$tmp_path/$event_name.scc_cau
+done
+#############################
+
+
+###########決定tremor跟noise#################
+tremor_char=$(cat $tmp_path/scc*scc* | gawk '$3>=0.6{print $0}' | gawk -F"." '{print $4}' | sort | uniq -c | gawk '$1>=3{print $0}' | wc -l)
+tremor_char=$(($tremor_char + 0))
+if [ $tremor_char -ge 3 ]; then
+
+    echo "I'm Tremor."
+else
+    echo "I'm Noise."
+
+fi
+############################################
+
 rm $tmp_path/$event_name.txt
 rm $tmp_path/$event_name.txt.copy
 rm $data_path/*lp
 rm $data_path/*sqr
-
 
 ######計時用######
 TIME_ELAPSE_b=$(date --date="now" +%s)
